@@ -2,7 +2,7 @@
 
 Build a focused MVP that turns one complex source document into a guided, personalized, and verifiable task experience. The safest hackathon shape is not a generic document chatbot, but a document-to-workflow system: upload a PDF or pasted text, extract the structure and obligations, transform it into an accessibility-aware interface, and validate that the simplified presentation still preserves the original meaning.
 
-Assumption for planning: prioritize public-service forms, policies, and procedural documents because they have clear requirements, deadlines, exceptions, and strong demo value. Keep the first version document-centric rather than fully multimodal or domain-general.
+Assumption for planning: prioritize public-service forms, policies, and procedural documents because they have clear requirements, deadlines, exceptions, and strong demo value. With only one week left, the MVP should focus on an interactive form caseworker, not a broad document platform.
 
 **Core product concept**
 - Problem: complex documents are technically available but not practically usable for people with different accessibility and cognitive needs.
@@ -149,23 +149,17 @@ Optional/stretch features:
 - Avoid claiming clinical accessibility compliance; instead say the product is accessibility-oriented and user-configurable.
 
 **Wow factor**
-- Strongest demo: upload a difficult government form or policy PDF, then show three synchronized views: original document, extracted requirements map, and a personalized step-by-step task flow.
-- Add a live fidelity panel that highlights deadlines, conditions, and exceptions and shows what was preserved.
-- If time allows, add a one-click switch between standard and simplified experiences to make the before/after transformation obvious.
-- A voice readout or shareable checklist can add polish without changing the core story.
+- Strongest demo: a form caseworker that asks one plain-language question at a time, fills the form structure, and shows the user exactly what will be submitted.
+- Add a live fidelity panel for deadlines, conditions, exceptions, and validation rules.
+- Keep the before/after story visible: original form, guided Q&A, completed draft, and preserved requirements.
+- Voice fallback and accessibility presets are good polish if they stay lightweight.
 
 **Architecture options**
-- Simplest / lowest risk
-  - Components: web app, PDF/OCR extraction, LLM structured extraction, prompt-based simplification, deterministic UI rendering, citation links, export.
-  - Tradeoff: quickest to build, easiest to demo, least robust on complex layout or very long docs.
-- Balanced recommended approach
-  - Components: document ingestion service, schema-based extraction pipeline, verifier pass, transformation renderer, accessibility preference engine, source-highlight UI, storage for parsed documents.
-  - Tradeoff: still hackathon-feasible, better trust story, enough structure to support a polished demo.
-- Ambitious
-  - Components: multimodal ingestion, dependency graph builder, verification layer, multilingual/voice pipeline, user task memory, optional domain packs.
-  - Tradeoff: most impressive on paper, but highest risk of integration and QA problems.
+- Simplest / lowest risk: upload a form, extract fields and rules, ask questions one by one, fill a draft, and show citations.
+- Balanced recommended approach: structured extraction + verifier + guided Q&A + accessibility presets + validation UI.
+- Ambitious: add multimodal input, multilingual/voice, and domain packs.
 
-Recommended architecture for the hackathon: balanced. It gives a strong demo narrative while keeping the build bounded.
+Recommended architecture for the hackathon: balanced, with the conversational form-filling loop as the core.
 
 **Data strategy**
 - Use a small curated set of public documents: government forms, benefits instructions, school policy pages, housing notices, and workplace procedures.
@@ -192,29 +186,22 @@ Recommended architecture for the hackathon: balanced. It gives a strong demo nar
 - Excessive scope: mitigate by choosing one document type, one core workflow, and a few high-value accessibility presets.
 - API/dependency failures: mitigate by caching outputs, keeping deterministic fallbacks, and preparing precomputed demo cases.
 
-**Two-week implementation plan**
-Day 1: finalize scope, choose document type, define schema, choose stack, collect 5-10 test documents.
-Day 2: build ingestion and text extraction pipeline.
-Day 3: implement structured extraction and save canonical JSON.
-Day 4: add source citation mapping and highlight UI.
-Day 5: build simplified explanation and step-by-step rendering.
-Day 6: add accessibility preference controls and response templates.
-Day 7: implement verifier pass and flagging for numbers, deadlines, conditions, and exceptions.
-Day 8: create comparison view and demo-friendly layouts.
-Day 9: add export/share flow and polish interaction states.
-Day 10: run evaluation suite, fix extraction failures, tighten prompts and rules.
-Day 11: improve robustness for edge cases and scanned/PDF inputs.
-Day 12: refine UI/UX and demo storytelling.
-Day 13: rehearse the end-to-end demo, precompute fallback runs, and prepare screenshots/video.
-Day 14: final bugfixes, deployment hardening, and presentation prep.
+**One-week implementation plan**
+Day 1: lock scope, choose one form, define the field/rule schema, and gather test docs.
+Day 2: build upload + OCR/text extraction + field parsing.
+Day 3: implement structured extraction and validation rules.
+Day 4: build the guided question-by-question UI.
+Day 5: add accessibility modes and the source citation panel.
+Day 6: add the verifier, error recovery, and completed-form preview.
+Day 7: polish the demo, fix edge cases, and rehearse the end-to-end flow.
 
-Parallelization note: ingestion, extraction, UI rendering, and evaluation data prep can proceed in parallel once schema decisions are made.
+Parallelization note: one person can own extraction, one can own UI, and one can own verifier/evaluation in parallel.
 
 **Recommended MVP**
-- Product: a document transformation app for one hard public-service or policy document.
-- User journey: upload a document, the system extracts the structure and key requirements, the user selects an accessibility mode, the app presents a simplified and step-by-step task view with citations, the verifier highlights preserved deadlines and exceptions, and the user exports a checklist or guided plan for action.
-- Why this MVP: it demonstrates the full thesis of the project, is feasible within two weeks, and produces a clear before/after transformation that judges can understand immediately.
-- Excluded from MVP: fully generic document chat, large-scale knowledge base, advanced personalization inference, and training any custom model.
+- Product: a form caseworker that turns one difficult form into a guided, accessible, question-by-question experience.
+- User journey: upload form -> extract fields, rules, and validation -> ask one plain-language question at a time -> adapt explanations if the user struggles -> fill a draft -> show a final review with citations and warnings.
+- Why this MVP: it is clearly different from NotebookLM, shows accessibility in action, and is realistic in one week.
+- Excluded from MVP: generic document chat, broad document types, and heavyweight extension work.
 
 **Further considerations**
 - Decide early whether the first demo document will be a form, policy, or instruction set; I recommend a government or public-service form because the requirement structure is easiest to showcase.
