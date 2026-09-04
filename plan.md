@@ -1,74 +1,28 @@
 ## Plan: Accessible Document Transformation Platform
 
-Build a focused MVP that turns one complex source document into a guided, personalized, and verifiable task experience. The safest hackathon shape is not a generic document chatbot, but a document-to-workflow system: upload a PDF or pasted text, extract the structure and obligations, transform it into an accessibility-aware interface, and validate that the simplified presentation still preserves the original meaning.
+Build a focused MVP that turns one complex form into a guided, personalized, and verifiable task experience. The safest hackathon shape is not a generic document chatbot, but a document-to-workflow system: upload a form, extract the structure and rules, ask one plain-language question at a time, and validate that the result still preserves the original meaning.
 
 Assumption for planning: prioritize public-service forms, policies, and procedural documents because they have clear requirements, deadlines, exceptions, and strong demo value. With only one week left, the MVP should focus on an interactive form caseworker, not a broad document platform.
 
 **Core product concept**
-- Problem: complex documents are technically available but not practically usable for people with different accessibility and cognitive needs.
-- Target users: students, job seekers, tenants, patients, immigrants, caregivers, disabled users, older adults, and anyone facing dense forms or instructions.
-- Value proposition: convert documents into an action-oriented guided experience that preserves the source meaning while adapting presentation, pacing, and interaction mode.
-- Differentiator from a generic chatbot: the system should not just answer questions or summarize. It should extract obligations, conditions, exceptions, deadlines, required materials, and next steps into a structured representation, then generate an interface that helps the user complete the task with validation and citations.
+- Problem: dense forms are technically available but still hard to complete.
+- Target users: anyone who needs help understanding and filling a form.
+- Value proposition: turn a form into an accessibility-aware guided assistant that preserves requirements, deadlines, exceptions, and validation rules.
+- Differentiator from a generic chatbot: it helps the user act, not just read.
 
 **Feature set**
 
 Essential MVP features:
-- Document upload and text extraction
-  - Problem solved: users need a way to bring in a source document quickly.
-  - UX: upload PDF/DOCX/image or paste text; show detected text and document status.
-  - Usefulness: enables the full pipeline.
-  - Difficulty: medium.
-  - Implementation: standard file upload, PDF text extraction, OCR fallback for scanned pages, basic layout preservation.
-- Structure and requirement extraction
-  - Problem solved: documents are hard to parse mentally.
-  - UX: app returns sections like purpose, eligibility, required actions, deadlines, exceptions, documents needed, warnings.
-  - Usefulness: creates the source of truth for all later transformations.
-  - Difficulty: medium-high.
-  - Implementation: LLM structured output/function calling with a fixed schema plus rule-based post-processing for dates, numbers, and condition clauses.
-- Plain-language transformation
-  - Problem solved: dense wording blocks comprehension.
-  - UX: each section gets a simplified explanation written in short, readable chunks.
-  - Usefulness: directly improves accessibility.
-  - Difficulty: medium.
-  - Implementation: prompt the LLM to rewrite each extracted clause with strict fidelity constraints and citations back to source spans.
-- Guided step-by-step view
-  - Problem solved: users need actionable progression, not a wall of text.
-  - UX: the document becomes a checklist or wizard with one task per screen.
-  - Usefulness: helps people actually complete the process.
-  - Difficulty: medium.
-  - Implementation: deterministic flow generator from extracted requirements and dependencies.
-- Source-grounded highlighting and citations
-  - Problem solved: users need trust and traceability.
-  - UX: each simplified statement links to the exact source sentence or page.
-  - Usefulness: reduces hallucination risk and supports verification.
-  - Difficulty: medium.
-  - Implementation: source-span mapping, sentence-level citations, highlighted excerpts in the UI.
+- Upload + extraction: accept a form, OCR it if needed, and extract the field/rule structure.
+- Guided Q&A: ask one plain-language question at a time and map answers back to the correct field.
+- Validation: check required fields, formats, deadlines, and conditional rules.
+- Accessibility modes: simple language, large text, reduced cognitive load, and screen-reader-friendly layout.
+- Source citations: show where each requirement came from.
 
 High-value features:
-- Deadline and condition detector
-  - Problem solved: users miss deadlines or conditional requirements.
-  - UX: deadlines and “if/then” rules are visually emphasized and summarized separately.
-  - Usefulness: very important for forms and policies.
-  - Difficulty: medium.
-  - Implementation: hybrid extraction using regex/date parsing for numeric values and LLM classification for conditionals.
-- Required documents and data checklist
-  - Problem solved: users do not know what to prepare.
-  - UX: the app generates a checklist of documents, IDs, references, or fields needed.
-  - Usefulness: directly supports completion.
-  - Difficulty: medium.
-  - Implementation: schema field extraction plus normalization into checklist items.
-- Readability and cognitive-load modes
-  - Problem solved: one explanation does not fit all users.
-  - UX: toggle between standard, simple, and ultra-simple modes; optional chunking and progressive disclosure.
-  - Usefulness: improves accessibility without assuming a disability.
-  - Difficulty: medium.
-  - Implementation: prompt variants and UI templates controlled by user-selected preference.
-- Question-driven assistant for completion
-  - Problem solved: users often need the system to help them fill in the task.
-  - UX: the app asks one question at a time and populates an answer draft or form helper.
-  - Usefulness: bridges understanding and action.
-  - Difficulty: medium-high.
-  - Implementation: guided state machine over required fields and dependencies.
+- Deadline/condition detection.
+- Required-doc checklist.
+- Final review before submit.
 
 Technically impressive features:
 - Fidelity validator / verifier pass
@@ -123,60 +77,44 @@ Optional/stretch features:
   - Implementation: prompt and schema variants.
 
 **AI/ML implementation approaches**
-- Use deterministic parsing where possible for file ingestion, OCR, document splitting, sentence segmentation, date extraction, and numeric normalization.
-- Use LLM structured output for the main semantic extraction into a strict schema: document purpose, entities, obligations, requirements, deadlines, exceptions, warnings, next steps, and confidence markers.
-- Use RAG only if the document set grows beyond a single upload; for the hackathon MVP, the source document itself is usually enough.
-- Use a second-pass verifier LLM or rule engine to compare transformed outputs against source claims, especially for dates, thresholds, negations, and conditional language.
-- Use embeddings only for targeted retrieval inside large documents or to match source spans to extracted claims.
-- Use classification for lightweight labeling such as document type, section type, and risk level.
-- Use graph or dependency reasoning to order steps, such as prerequisites before submission or conditional branches based on eligibility.
-- Use speech APIs only if they materially strengthen the demo; otherwise keep them optional.
+- Deterministic parsing for ingestion, OCR, date extraction, and validation rules.
+- LLM structured output for the form schema and guided question generation.
+- Rule-based checks for required fields, numbers, deadlines, and branches.
+- A verifier pass to catch omissions or weakened conditions.
 
 **Information-preservation strategy**
-- Extract a canonical structured representation before rewriting any text.
-- Preserve numbers, dates, amounts, thresholds, and negations in dedicated typed fields instead of leaving them inside freeform prose.
-- Mark every output claim with a source citation and, where possible, a source span.
-- Run a claim comparison pass that checks whether each transformed statement can be traced to one or more source statements.
-- Flag risk categories: conditional clauses, exclusions, deadlines, exceptions, eligibility thresholds, and warning language.
-- Block or visually warn on low-confidence claims instead of silently presenting them.
-- For the hackathon timeline, implement practical checks: regex/date validation, unit normalization, source span coverage, and a verifier prompt that asks whether any requirement was omitted or weakened.
+- Keep one canonical structured form of the source.
+- Store numbers, deadlines, conditions, and exceptions as typed fields.
+- Cite every answer and flag anything low-confidence.
+- Compare the draft against the source before showing completion.
 
 **Accessibility personalization**
-- Make accessibility preferences explicit user controls rather than inferred medical/disability claims.
-- Useful modes to support early: simple language, reduced cognitive load, step-by-step mode, screen-reader-friendly layout, large text/high contrast, and optional voice output.
-- Adaptation should change presentation, chunk size, interaction flow, and explanation style, not the underlying source meaning.
-- Multilingual support should be framed as a language preference, not an accessibility diagnosis.
-- Avoid claiming clinical accessibility compliance; instead say the product is accessibility-oriented and user-configurable.
+- Keep accessibility as explicit user-selected settings.
+- Support simple language, large text, screen-reader-friendly layout, and reduced cognitive load.
+- Keep the meaning the same while changing how the form is presented.
 
 **Wow factor**
-- Strongest demo: a form caseworker that asks one plain-language question at a time, fills the form structure, and shows the user exactly what will be submitted.
-- Add a live fidelity panel for deadlines, conditions, exceptions, and validation rules.
-- Keep the before/after story visible: original form, guided Q&A, completed draft, and preserved requirements.
-- Voice fallback and accessibility presets are good polish if they stay lightweight.
+- Strongest demo: a form caseworker that asks one plain-language question at a time and builds a reviewable draft.
+- Show the original form, live guidance, and the final filled draft side by side.
+- Keep the fidelity panel focused on deadlines, conditions, and exceptions.
 
 **Architecture options**
-- Simplest / lowest risk: upload a form, extract fields and rules, ask questions one by one, fill a draft, and show citations.
-- Balanced recommended approach: structured extraction + verifier + guided Q&A + accessibility presets + validation UI.
-- Ambitious: add multimodal input, multilingual/voice, and domain packs.
+- Simplest / lowest risk: upload a form, extract fields and rules, ask questions one by one, and fill a draft.
+- Balanced recommended approach: structured extraction + verifier + guided Q&A + accessibility presets.
+- Ambitious: add multimodal input and multilingual/voice.
 
 Recommended architecture for the hackathon: balanced, with the conversational form-filling loop as the core.
 
 **Data strategy**
-- Use a small curated set of public documents: government forms, benefits instructions, school policy pages, housing notices, and workplace procedures.
-- Include deliberately difficult edge cases: date deadlines, eligibility exceptions, conditional branches, required attachments, and warnings.
-- Create synthetic variants by taking a real document and rewriting names or removing branding to avoid policy or privacy problems.
-- Manually annotate 5-10 test documents with ground-truth requirements, deadlines, conditions, and required documents.
-- Keep a few “demo-perfect” documents that are intentionally chosen for visual transformation clarity.
+- Use 2-3 public forms plus a few synthetic edge cases.
+- Include deadlines, conditions, required attachments, and warnings.
+- Manually annotate the key fields once.
 
 **Evaluation**
-- Fidelity: count preserved requirements, deadlines, eligibility conditions, and exceptions against the annotated source.
-- Hallucination rate: number of unsupported claims in the transformed output.
-- Coverage: percentage of key source clauses represented in the structured output.
-- Readability: approximate reading level or sentence-length reduction in simplified mode.
-- Task usefulness: whether the output includes enough information to start or complete the task.
-- Conditional correctness: whether the system correctly preserves branching logic and exclusions.
-- For testing, use a small suite of documents with known edge cases and ask the model to surface them in structured form before any simplification.
-- For the demo, show a regression-style checklist: source deadline preserved, exception preserved, required docs preserved, warning preserved, unsupported claim rejected.
+- Did it preserve deadlines, conditions, exceptions, and required fields?
+- Did it avoid unsupported claims?
+- Did the user get to a fillable draft?
+- Did the accessibility mode actually change the presentation?
 
 **Risks and mitigations**
 - Hallucination: mitigate with structured extraction, citations, and verifier passes.
@@ -204,6 +142,6 @@ Parallelization note: one person can own extraction, one can own UI, and one can
 - Excluded from MVP: generic document chat, broad document types, and heavyweight extension work.
 
 **Further considerations**
-- Decide early whether the first demo document will be a form, policy, or instruction set; I recommend a government or public-service form because the requirement structure is easiest to showcase.
-- Keep all accessibility modes user-selected and visibly switchable so the demo can show adaptation without making unsupported assumptions.
-- Treat the verifier as a first-class product feature, not just an internal debug tool, because it directly supports trust and differentiation.
+- Keep optional/stretch items as future polish, not core scope.
+- Use a government or public-service form for the demo.
+- Keep the verifier visible so trust is part of the story.
