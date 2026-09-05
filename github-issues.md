@@ -1,10 +1,7 @@
 # Role Split and GitHub Issues
 
-## Your part
-- Integration / backend: owns file handling, state storage, API wiring, and deployment glue.
-- Your main goal: keep the upload -> extraction -> question flow -> review flow connected end to end.
-
 ## Suggested role split
+- Main goal: keep the upload -> extraction -> question flow -> review flow connected end to end.
 - AI / extraction: owns form parsing, structured output, validation rules, verifier logic.
 - Frontend / UX: owns upload flow, guided Q&A UI, accessibility modes, review screen.
 - Integration / backend: owns file handling, state storage, API wiring, and deployment glue.
