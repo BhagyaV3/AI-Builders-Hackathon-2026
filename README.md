@@ -4,11 +4,11 @@ AccessBridge is an AI-powered accessibility project that turns complex forms and
 
 ## Overview
 
-The goal of AccessBridge is not to build another generic document chatbot. Instead, it focuses on helping users actually complete forms and understand requirements by combining document parsing, guided questions, accessibility-aware presentation, and fidelity checks.
+AccessBridge is designed to help users actually complete forms and understand requirements. It combines document parsing, guided questions, accessibility-aware presentation, and fidelity checks instead of acting like a generic document chatbot.
 
 ## Description
 
-AccessBridge is being designed around one core flow:
+AccessBridge follows one core flow:
 
 1. Upload a form or document.
 2. Extract the field structure, rules, deadlines, and conditions.
@@ -16,43 +16,50 @@ AccessBridge is being designed around one core flow:
 4. Adapt the experience for accessibility preferences.
 5. Show a reviewable draft with citations and warnings before final submission.
 
-The current repository is in planning and setup mode, so the emphasis is on defining the product, issues, and implementation order before the full application is built.
+This repository is currently in planning and setup mode, so the main focus is defining the product, issues, and implementation order before the full application is built.
 
-## Planned MVP
+## Running the Application Locally
 
-- Form upload and text extraction
-- Structured extraction of fields, rules, and conditions
-- Guided question-by-question flow
-- Accessibility modes such as simple language and large text
-- Source citations and a fidelity check before review
+The full application is not built yet, so there is nothing runnable at this stage.
 
-## Repository Structure
+Planned local workflow once implementation begins:
 
-```text
-AccessBridge/
-├── README.md
-├── CONTRIBUTING.md
-├── plan.md
-└── github-issues.md
-```
+- review `plan.md` for scope and architecture
+- review `github-issues.md` for task breakdown
+- add the app code under the agreed frontend/backend structure
+- run the app locally using the final stack chosen by the team
 
-## Working With the Project
+## Contributions
 
-At this stage, the repo is documentation-first. The main files to review are:
+AccessBridge is a hackathon project, so contributions should stay aligned with the current MVP scope.
 
-- [plan.md](./plan.md) - project concept, feature scope, risks, and one-week plan
-- [github-issues.md](./github-issues.md) - issue breakdown and role split
+### Identify a Change
 
-## Development Notes
+Choose a concrete task, bug, or small feature slice from `github-issues.md`.
 
-- Keep the MVP narrow.
-- Focus on one form type first.
-- Favor reliability and clarity over breadth.
-- Keep accessibility preferences explicit and user-controlled.
+### Descriptive Titles
 
-## Contributing
+Use short, specific titles that make it obvious what the change does.
 
-Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening issues or pull requests.
+### Branch Creation
+
+Use a branch name tied to the work, such as `backend-form-extraction` or `frontend-guided-flow`.
+
+### Code
+
+Keep changes focused, readable, and easy to review.
+
+### Pull Request
+
+Open a PR when the task is ready and include a short summary plus any issue reference.
+
+### Review
+
+Address feedback quickly and keep the work aligned with the MVP.
+
+### Merging
+
+Merge only when the change is stable and still matches the project scope.
 
 ## Contact
 
