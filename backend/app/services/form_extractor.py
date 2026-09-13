@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 import re
 
@@ -11,6 +12,11 @@ from app.schemas.form import (
     FormRule,
     FormWarning,
 )
+
+try:
+    from pypdf import PdfReader
+except ImportError:  # pragma: no cover - fallback when dependency is unavailable
+    PdfReader = None
 
 
 @dataclass
@@ -28,14 +34,53 @@ def _decode_bytes(raw_bytes: bytes) -> str:
     return raw_bytes.decode("utf-8", errors="ignore")
 
 
-def parse_uploaded_content(file_name: str | None, raw_bytes: bytes | None, text: str | None) -> ParsedForm:
+def _extract_pdf_text(raw_bytes: bytes) -> str:
+    if PdfReader is None:
+        return ""
+
+    try:
+        reader = PdfReader(BytesIO(raw_bytes))
+    except Exception:
+        return ""
+
+    pages: list[str] = []
+    for page in reader.pages:
+        try:
+            page_text = page.extract_text() or ""
+        except Exception:
+            page_text = ""
+        if page_text.strip():
+            pages.append(page_text.strip())
+
+    return "\n".join(pages)
+
+
+def _extract_text_from_upload(file_name: str | None, content_type: str | None, raw_bytes: bytes) -> str:
+    normalized_file_name = (file_name or "").lower()
+    normalized_content_type = (content_type or "").lower()
+    looks_like_pdf = "pdf" in normalized_content_type or normalized_file_name.endswith(".pdf")
+
+    if looks_like_pdf:
+        pdf_text = _extract_pdf_text(raw_bytes).strip()
+        if pdf_text:
+            return pdf_text
+
+    return _decode_bytes(raw_bytes).strip()
+
+
+def parse_uploaded_content(
+    file_name: str | None,
+    raw_bytes: bytes | None,
+    text: str | None,
+    content_type: str | None = None,
+) -> ParsedForm:
     if text and text.strip():
         return ParsedForm(file_name=file_name or "pasted-text", text=text.strip())
 
     if raw_bytes:
-        decoded = _decode_bytes(raw_bytes).strip()
-        if decoded:
-            return ParsedForm(file_name=file_name or "uploaded-file", text=decoded)
+        extracted_text = _extract_text_from_upload(file_name, content_type, raw_bytes)
+        if extracted_text:
+            return ParsedForm(file_name=file_name or "uploaded-file", text=extracted_text)
 
     return ParsedForm(
         file_name=file_name or "unknown-form",
@@ -48,6 +93,10 @@ def parse_uploaded_content(file_name: str | None, raw_bytes: bytes | None, text:
 
 
 def build_mock_extraction(parsed_form: ParsedForm) -> FormExtractionResponse:
+    return build_form_extraction(parsed_form)
+
+
+def build_form_extraction(parsed_form: ParsedForm) -> FormExtractionResponse:
     text = parsed_form.text
     lower_text = text.lower()
 
@@ -56,37 +105,61 @@ def build_mock_extraction(parsed_form: ParsedForm) -> FormExtractionResponse:
     deadlines: list[FormDeadline] = []
     exceptions: list[str] = []
     warnings: list[FormWarning] = []
-    next_steps: list[str] = []
 
-    if "name" in lower_text:
-        fields.append(
-            FormField(
-                name="applicant_name",
-                label="Applicant name",
-                required=True,
-                source_excerpt=_find_excerpt(text, r"name"),
-            )
-        )
-
-    if "income" in lower_text:
-        fields.append(
-            FormField(
-                name="income",
-                label="Monthly income",
-                required=True,
-                source_excerpt=_find_excerpt(text, r"income"),
-            )
-        )
-
-    if "signature" in lower_text:
-        fields.append(
-            FormField(
-                name="signature",
-                label="Signature",
-                required=False,
-                source_excerpt=_find_excerpt(text, r"signature"),
-            )
-        )
+    _append_field_if_present(
+        fields,
+        lower_text,
+        name="applicant_name",
+        label="Applicant name",
+        pattern=r"\b(name|full name|applicant name)\b",
+        required=True,
+        source_text=text,
+    )
+    _append_field_if_present(
+        fields,
+        lower_text,
+        name="income",
+        label="Monthly income",
+        pattern=r"\b(income|monthly income|annual income)\b",
+        required=True,
+        source_text=text,
+    )
+    _append_field_if_present(
+        fields,
+        lower_text,
+        name="signature",
+        label="Signature",
+        pattern=r"\b(signature|sign)\b",
+        required=False,
+        source_text=text,
+    )
+    _append_field_if_present(
+        fields,
+        lower_text,
+        name="date_of_birth",
+        label="Date of birth",
+        pattern=r"\b(date of birth|dob)\b",
+        required=True,
+        source_text=text,
+    )
+    _append_field_if_present(
+        fields,
+        lower_text,
+        name="address",
+        label="Mailing address",
+        pattern=r"\b(address|mailing address|home address)\b",
+        required=True,
+        source_text=text,
+    )
+    _append_field_if_present(
+        fields,
+        lower_text,
+        name="academic_score",
+        label="Academic score",
+        pattern=r"\b(gpa|score|scores|marks|grade|grade card|score card)\b",
+        required="required" in lower_text or "must" in lower_text,
+        source_text=text,
+    )
 
     if "submit" in lower_text or "due" in lower_text or "deadline" in lower_text:
         deadline_text = _find_sentence(text, ["submit", "due", "deadline"]) or "Submit by the listed deadline."
@@ -140,7 +213,7 @@ def build_mock_extraction(parsed_form: ParsedForm) -> FormExtractionResponse:
     if not exceptions:
         exceptions.append("No explicit exception detected in the parsed text.")
 
-    if "required" in lower_text or "must" in lower_text:
+    if "required" in lower_text or "must" in lower_text or "shall" in lower_text:
         warnings.append(
             FormWarning(
                 text="The form contains required items that must be completed carefully.",
@@ -178,6 +251,31 @@ def build_mock_extraction(parsed_form: ParsedForm) -> FormExtractionResponse:
         warnings=warnings,
         next_steps=next_steps,
         confidence=0.62,
+    )
+
+
+def _append_field_if_present(
+    fields: list[FormField],
+    lower_text: str,
+    name: str,
+    label: str,
+    pattern: str,
+    required: bool,
+    source_text: str,
+) -> None:
+    if any(existing_field.name == name for existing_field in fields):
+        return
+
+    if not re.search(pattern, lower_text, flags=re.IGNORECASE):
+        return
+
+    fields.append(
+        FormField(
+            name=name,
+            label=label,
+            required=required,
+            source_excerpt=_find_excerpt(source_text, pattern),
+        )
     )
 
 

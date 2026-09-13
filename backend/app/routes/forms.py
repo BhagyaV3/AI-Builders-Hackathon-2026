@@ -17,5 +17,6 @@ async def process_form(
         file_name=file.filename if file is not None else None,
         raw_bytes=raw_bytes,
         text=document_text,
+        content_type=file.content_type if file is not None else None,
     )
     return build_mock_extraction(parsed_form)
