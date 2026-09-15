@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import json
+import os
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 import re
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from app.schemas.form import (
     FormDeadline,
@@ -93,7 +97,213 @@ def parse_uploaded_content(
 
 
 def build_mock_extraction(parsed_form: ParsedForm) -> FormExtractionResponse:
+    cloud_response = _maybe_build_cloud_extraction(parsed_form)
+    if cloud_response is not None:
+        return cloud_response
+
     return build_form_extraction(parsed_form)
+
+
+def _maybe_build_cloud_extraction(parsed_form: ParsedForm) -> FormExtractionResponse | None:
+    if not _should_use_cloud_ai():
+        return None
+
+    try:
+        return _call_cloud_extraction(parsed_form)
+    except Exception:
+        return None
+
+
+def _should_use_cloud_ai() -> bool:
+    mode = os.getenv("ACCESSBRIDGE_AI_MODE", "mock").strip().lower()
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    return mode in {"cloud", "openai", "api"} and bool(api_key)
+
+
+def _call_cloud_extraction(parsed_form: ParsedForm) -> FormExtractionResponse | None:
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        return None
+
+    model = os.getenv("OPENAI_MODEL", "gpt-4.1-mini").strip() or "gpt-4.1-mini"
+    base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").strip().rstrip("/")
+    default_response = build_form_extraction(parsed_form)
+
+    request_payload = {
+        "model": model,
+        "temperature": 0,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You extract structured form data for an accessibility app. "
+                    "Return only valid JSON with these keys: file_name, title, summary, fields, rules, deadlines, exceptions, warnings, next_steps, confidence. "
+                    "Use arrays for fields, rules, deadlines, exceptions, warnings, and next_steps. "
+                    "Each field should include name, label, required, and optional value and source_excerpt. "
+                    "Each rule should include kind, text, and optional source_excerpt. "
+                    "Each deadline should include text, optional due_date, and optional source_excerpt. "
+                    "Each warning should include text, severity, and optional source_excerpt. "
+                    "Do not wrap the JSON in markdown."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"File name: {parsed_form.file_name}\n\n"
+                    f"Document text:\n{parsed_form.text}\n\n"
+                    "Extract the form details now."
+                ),
+            },
+        ],
+    }
+
+    body = json.dumps(request_payload).encode("utf-8")
+    request = Request(
+        f"{base_url}/chat/completions",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+        with urlopen(request, timeout=30) as response:
+            response_payload = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError, ValueError):
+        return None
+
+    try:
+        content = response_payload["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError):
+        return None
+
+    if not isinstance(content, str):
+        return None
+
+    return _parse_cloud_response(content, parsed_form, default_response)
+
+
+def _parse_cloud_response(
+    content: str,
+    parsed_form: ParsedForm,
+    default_response: FormExtractionResponse,
+) -> FormExtractionResponse | None:
+    json_text = _strip_json_fences(content)
+
+    try:
+        payload = json.loads(json_text)
+    except json.JSONDecodeError:
+        return None
+
+    if not isinstance(payload, dict):
+        return None
+
+    fields = [_coerce_field(item) for item in _ensure_list(payload.get("fields"))]
+    rules = [_coerce_rule(item) for item in _ensure_list(payload.get("rules"))]
+    deadlines = [_coerce_deadline(item) for item in _ensure_list(payload.get("deadlines"))]
+    warnings = [_coerce_warning(item) for item in _ensure_list(payload.get("warnings"))]
+    exceptions = [str(item).strip() for item in _ensure_list(payload.get("exceptions")) if str(item).strip()]
+    next_steps = [str(item).strip() for item in _ensure_list(payload.get("next_steps")) if str(item).strip()]
+
+    return FormExtractionResponse(
+        file_name=str(payload.get("file_name") or default_response.file_name or parsed_form.file_name),
+        title=str(payload.get("title") or default_response.title),
+        summary=str(payload.get("summary") or default_response.summary),
+        fields=fields or default_response.fields,
+        rules=rules or default_response.rules,
+        deadlines=deadlines or default_response.deadlines,
+        exceptions=exceptions or default_response.exceptions,
+        warnings=warnings or default_response.warnings,
+        next_steps=next_steps or default_response.next_steps,
+        confidence=_coerce_float(payload.get("confidence"), default_response.confidence),
+    )
+
+
+def _strip_json_fences(content: str) -> str:
+    stripped = content.strip()
+    if stripped.startswith("```"):
+        stripped = stripped.removeprefix("```")
+        if stripped.lower().startswith("json"):
+            stripped = stripped[4:]
+        stripped = stripped.strip()
+        if stripped.endswith("```"):
+            stripped = stripped.removesuffix("```")
+    return stripped.strip()
+
+
+def _ensure_list(value: object) -> list[object]:
+    if isinstance(value, list):
+        return value
+    return []
+
+
+def _coerce_field(value: object) -> FormField:
+    if not isinstance(value, dict):
+        return FormField(name="field", label="Field")
+
+    return FormField(
+        name=str(value.get("name") or "field"),
+        label=str(value.get("label") or "Field"),
+        value=_optional_str(value.get("value")),
+        required=bool(value.get("required", False)),
+        source_excerpt=_optional_str(value.get("source_excerpt")),
+    )
+
+
+def _coerce_rule(value: object) -> FormRule:
+    if not isinstance(value, dict):
+        return FormRule(kind="instruction", text="Review the form carefully.")
+
+    return FormRule(
+        kind=str(value.get("kind") or "instruction"),
+        text=str(value.get("text") or "Review the form carefully."),
+        source_excerpt=_optional_str(value.get("source_excerpt")),
+    )
+
+
+def _coerce_deadline(value: object) -> FormDeadline:
+    if not isinstance(value, dict):
+        return FormDeadline(text="No explicit deadline detected.")
+
+    return FormDeadline(
+        text=str(value.get("text") or "No explicit deadline detected."),
+        due_date=_optional_str(value.get("due_date")),
+        source_excerpt=_optional_str(value.get("source_excerpt")),
+    )
+
+
+def _coerce_warning(value: object) -> FormWarning:
+    if not isinstance(value, dict):
+        return FormWarning(text="Review carefully.", severity="medium")
+
+    return FormWarning(
+        text=str(value.get("text") or "Review carefully."),
+        severity=str(value.get("severity") or "medium"),
+        source_excerpt=_optional_str(value.get("source_excerpt")),
+    )
+
+
+def _optional_str(value: object) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _coerce_float(value: object, fallback: float) -> float:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return fallback
+
+    if number < 0:
+        return 0.0
+    if number > 1:
+        return 1.0
+    return number
 
 
 def build_form_extraction(parsed_form: ParsedForm) -> FormExtractionResponse:

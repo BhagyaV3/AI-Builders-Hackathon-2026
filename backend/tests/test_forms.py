@@ -1,6 +1,8 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.schemas.form import FormDeadline, FormExtractionResponse, FormField, FormRule, FormWarning
+from app.services import form_extractor
 
 
 client = TestClient(app)
@@ -70,6 +72,61 @@ def test_process_form_with_pdf_upload() -> None:
     assert any(field["name"] == "applicant_name" for field in payload["fields"])
     assert payload["deadlines"]
     assert payload["summary"]
+
+
+def test_process_form_uses_cloud_ai_when_enabled(monkeypatch) -> None:
+    expected_response = FormExtractionResponse(
+        file_name="cloud-form.txt",
+        title="Cloud Extracted Form",
+        summary="Cloud extraction summary",
+        fields=[
+            FormField(
+                name="applicant_name",
+                label="Applicant name",
+                required=True,
+                source_excerpt="Applicant name is required.",
+            )
+        ],
+        rules=[
+            FormRule(
+                kind="instruction",
+                text="Fill the form carefully.",
+                source_excerpt="Fill the form carefully.",
+            )
+        ],
+        deadlines=[
+            FormDeadline(
+                text="Submit by March 15.",
+                due_date="March 15",
+                source_excerpt="Submit by March 15.",
+            )
+        ],
+        exceptions=["No explicit exception detected."],
+        warnings=[
+            FormWarning(
+                text="Required items must be completed carefully.",
+                severity="medium",
+                source_excerpt="required items",
+            )
+        ],
+        next_steps=["Complete the form."],
+        confidence=0.93,
+    )
+
+    monkeypatch.setenv("ACCESSBRIDGE_AI_MODE", "cloud")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr(form_extractor, "_call_cloud_extraction", lambda parsed_form: expected_response)
+
+    response = client.post(
+        "/api/forms/process",
+        data={"document_text": "Applicant name is required. Submit by March 15."},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["title"] == "Cloud Extracted Form"
+    assert payload["confidence"] == 0.93
+    assert payload["fields"][0]["name"] == "applicant_name"
 
 
 def _build_pdf_bytes(text: str) -> bytes:
