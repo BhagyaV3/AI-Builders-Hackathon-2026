@@ -97,6 +97,10 @@ AccessBridge is an AI-powered accessibility project that turns complex forms and
 | Storage | Lightweight app state and document metadata |
 | Testing | Unit and flow tests for extraction, validation, and UI behavior |
 
+### AI runtime
+
+The backend is wired for an OpenAI-compatible cloud model when `ACCESSBRIDGE_AI_MODE=cloud` and `OPENAI_API_KEY` is set. The default model name is `gpt-4.1-mini`, and the backend falls back to deterministic parsing if the cloud API is unavailable.
+
 ## Supported File Types
 
 |  |
@@ -144,6 +148,10 @@ See future screenshots in the repo once the application UI exists.
 ### Install dependencies
 
 When the implementation starts, install the chosen frontend and backend dependencies for the final stack.
+
+### Configure AI
+
+Set `ACCESSBRIDGE_AI_MODE=cloud`, `OPENAI_API_KEY`, and optionally `OPENAI_MODEL` or `OPENAI_BASE_URL` to use the cloud LLM path. If you do not set those values, the backend uses the deterministic fallback extractor.
 
 ### Run the app
 
