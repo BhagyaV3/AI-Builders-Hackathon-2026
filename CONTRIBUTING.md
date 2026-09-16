@@ -6,12 +6,12 @@ AccessBridge is a short-horizon hackathon project, so the collaboration model sh
 
 ## Team Members & Responsibilities
 
-|  |
-|  |
-| TBD | TBD | Integration & Backend | Upload pipeline, API wiring, state handling, deployment glue |
-| TBD | TBD | AI & Extraction | Field extraction, rule detection, validation logic, verifier |
-| TBD | TBD | Frontend & UX | Guided flow, accessibility modes, review screen |
-| TBD | TBD | Demo & QA | Test cases, edge cases, walkthrough, presentation polish |
+| Name | Role | Responsibilities |
+| --- | --- | --- |
+| TBD | Integration & Backend | Upload pipeline, API wiring, state handling, deployment glue |
+| TBD | AI & Extraction | Field extraction, rule detection, validation logic, verifier |
+| TBD | Frontend & UX | Guided flow, accessibility modes, review screen |
+| TBD | Demo & QA | Test cases, edge cases, walkthrough, presentation polish |
 
 ## Branching Strategy
 
@@ -43,7 +43,7 @@ demo/presentation-polish
 3. Do your work, commit often
 4. `git push -u origin your-name/task-description`
 5. Open a PR to `main` on GitHub
-6. Self-merge or request review based on team agreement
+6. Merge after team review or agreed approval
 7. Delete the branch after merge
 
 ## Execution Order (Wave-Based)
@@ -52,16 +52,16 @@ Tasks have dependencies. Follow this order so the team can work in parallel with
 
 ### Wave 1 — Foundation
 
-|  |
-|  |
+| Area | Scope |
+| --- | --- |
 | Integration & Backend | Project structure, shared state, upload API skeleton |
 
 > Everyone is blocked until Wave 1 is merged. This creates the shared structure and interfaces that the other tasks depend on.
 
 ### Wave 2 — Core Modules (All 4 in parallel)
 
-|  |
-|  |
+| Area | Scope |
+| --- | --- |
 | Integration & Backend | API wiring and state storage |
 | AI & Extraction | Extraction schema and rule detection |
 | Frontend & UX | Layout planning, accessibility states, mock UI |
@@ -69,8 +69,8 @@ Tasks have dependencies. Follow this order so the team can work in parallel with
 
 ### Wave 3 — Feature Implementation (All 4 in parallel)
 
-|  |
-|  |
+| Area | Scope |
+| --- | --- |
 | Integration & Backend | Upload pipeline and structured payload handling |
 | AI & Extraction | Extraction pipeline and citation data |
 | Frontend & UX | Guided question-by-question flow |
@@ -78,8 +78,8 @@ Tasks have dependencies. Follow this order so the team can work in parallel with
 
 ### Wave 4 — Orchestration & UI Completion
 
-|  |
-|  |
+| Area | Scope |
+| --- | --- |
 | Integration & Backend | Validation wiring and final review payload |
 | Frontend & UX | Accessibility modes and review screen |
 | AI & Extraction | Fidelity checks and warning data |
@@ -87,8 +87,8 @@ Tasks have dependencies. Follow this order so the team can work in parallel with
 
 ### Wave 5 — Final Integration (Everyone)
 
-|  |
-|  |
+| Area | Scope |
+| --- | --- |
 | All members | Integration testing, bug fixes, polish, demo prep |
 
 ## Ground Rules
@@ -128,8 +128,8 @@ git branch -d your-name/task-name
 
 ## Tech Stack Reference
 
-|  |
-|  |
+| Layer | Stack |
+| --- | --- |
 | Runtime | Web app with API backend |
 | UI | React |
 | Backend | Document parsing, validation, and review APIs |
