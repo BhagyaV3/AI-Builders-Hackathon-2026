@@ -171,10 +171,10 @@ Test the extraction pipeline, guided flow, validation logic, and review screen b
 
 | Owner | Area | Focus |
 | --- | --- | --- |
-| TBD | Integration / Backend | Upload flow, API wiring, state, deployment glue |
-| TBD | AI / Extraction | Parsing, structured output, validation logic, verifier |
-| TBD | Frontend / UX | Guided Q&A, accessibility modes, review UI |
-| TBD | Demo / QA | Demo cases, edge cases, presentation polish |
+| Bhagya Vithanage | Integration / Backend | Upload flow, API wiring, state, deployment glue |
+| Sri Harshavarth | AI / Extraction | Parsing, structured output, validation logic, verifier |
+| Niyati Lohar | Frontend / UX | Guided Q&A, accessibility modes, review UI |
+| Animikh Rakshit | Demo / QA | Demo cases, edge cases, presentation polish |
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed workflow and task breakdown.
 
