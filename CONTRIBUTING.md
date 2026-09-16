@@ -8,10 +8,10 @@ AccessBridge is a short-horizon hackathon project, so the collaboration model sh
 
 | Name | Role | Responsibilities |
 | --- | --- | --- |
-| TBD | Integration & Backend | Upload pipeline, API wiring, state handling, deployment glue |
-| TBD | AI & Extraction | Field extraction, rule detection, validation logic, verifier |
-| TBD | Frontend & UX | Guided flow, accessibility modes, review screen |
-| TBD | Demo & QA | Test cases, edge cases, walkthrough, presentation polish |
+| Bhagya Vithanage | Integration & Backend | Upload pipeline, API wiring, state handling, deployment glue |
+| Sri Harshavarth M | AI & Extraction | Field extraction, rule detection, validation logic, verifier |
+| Niyati Lohar | Frontend & UX | Guided flow, accessibility modes, review screen |
+| Animikh Rakshit | Demo & QA | Test cases, edge cases, walkthrough, presentation polish |
 
 ## Branching Strategy
 
