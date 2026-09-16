@@ -2,29 +2,6 @@
 
 AccessBridge is an AI-powered accessibility project that turns complex forms and documents into a guided, personalized, and verifiable task experience.
 
-## Project Story
-
-### Inspiration
-AccessBridge came from a simple problem: complex forms are often technically available, but still too hard to understand and complete. We wanted to build something that does more than summarize documents. Instead, it turns forms into an accessible, guided experience that helps people take action while preserving the important details like deadlines, conditions, exceptions, and required fields.
-
-### What it does
-AccessBridge lets a user upload a form or paste document text, then extracts the structure of that form into a guided workflow. It identifies fields, rules, deadlines, warnings, and special cases, and can present the information in a more accessible, question-by-question format. It is designed to help users understand what they need to do, not just read the document.
-
-### How we built it
-We built the backend with FastAPI and a structured extraction pipeline. It supports pasted text, plain text files, and PDF uploads, and can fall back to deterministic parsing if the AI API is unavailable. We also added a cloud AI path using an OpenAI-compatible API so the project can use a real model for structured extraction while keeping the same output schema.
-
-### Challenges we ran into
-One challenge was balancing speed with reliability. We needed a solution that could work quickly for a hackathon demo as many of us were occupied with academics and lived in different areas or timezones, but still feel like a real accessibility tool. Another challenge was making sure the system preserved meaning instead of oversimplifying the form. We also had to keep the backend flexible enough to work both with and without a cloud AI API.
-
-### Accomplishments that we're proud of
-We are proud that AccessBridge now has a working end-to-end backend pipeline for form processing, plus a real cloud AI option. The system supports multiple input types, returns structured output, and is backed by tests. We also kept the design centered on accessibility and actionability, not just document summarization.
-
-### What we learned
-We learned that AI is most useful when it is constrained by structure. Instead of letting the model freely rewrite the document, we got better results by asking it to return organized fields, rules, deadlines, exceptions, and warnings. We also learned that a good hackathon MVP is one that stays focused on a clear user problem and a narrow, testable flow.
-
-### What's next for AccessBridge
-Next, we would connect the backend extraction to a guided frontend flow, add validation and review steps, and improve source citations and fidelity checks. After that, we would expand accessibility modes, add stronger verification, and support more document types and real-world form scenarios.
-
 ## Try It Yourself
 
 1. Clone the repository:
