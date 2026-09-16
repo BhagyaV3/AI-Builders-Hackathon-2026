@@ -31,6 +31,10 @@ export default function GuidedQA({
     setCurrentIndex(initialIndex);
   }, [initialIndex]);
 
+  useEffect(() => {
+    setAnswers(initialAnswers);
+  }, [initialAnswers]);
+
   if (!questions || questions.length === 0) {
     return <div className="card floating-card">No questions available.</div>;
   }
@@ -230,6 +234,21 @@ export default function GuidedQA({
       </div>
 
       {currentQ.helpText && <div className="help-text">{currentQ.helpText}</div>}
+
+      {currentQ.sourceExcerpt && (
+        <div
+          style={{
+            marginTop: "0.9rem",
+            padding: "0.85rem 1rem",
+            borderRadius: "10px",
+            border: "1px solid var(--border-color)",
+            background: "rgba(0, 0, 0, 0.02)",
+            fontSize: "0.92rem",
+          }}
+        >
+          <strong>Source:</strong> {currentQ.sourceExcerpt}
+        </div>
+      )}
 
       {/* Form Inputs with Custom Typography */}
       <div className="form-group" style={{ marginTop: "1.25rem" }}>
